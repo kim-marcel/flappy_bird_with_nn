@@ -1,5 +1,7 @@
 package flappybirdwithnn;
 
+import basicneuralnetwork.NeuralNetwork;
+
 import java.awt.*;
 
 public class Bird {
@@ -11,13 +13,20 @@ public class Bird {
 
     private double positionY;
     private double velocity;
+    private int score;
+    private Point panelSize;
+
+    private NeuralNetwork brain;
 
     Color color;
 
     public Bird(Point panelSize, Color color){
+        this.panelSize = panelSize;
         this.positionY = panelSize.y / 2;
         this.velocity = 0;
         this.color = color;
+        this.score = 0;
+        this.brain = new NeuralNetwork(4, 3, 1);
     }
 
     public void draw(Graphics g, Point panelSize){
@@ -40,8 +49,17 @@ public class Bird {
         stayInBoundaries(panelSize);
     }
 
-    public void fly(){
-        velocity = LIFT;
+    public void fly(Pipe currentPipe){
+        double[] input = {
+                currentPipe.getPositionX() / panelSize.x,
+                currentPipe.getSpaceHeight() / panelSize.y,
+                positionY / panelSize.y,
+                velocity / 10
+        };
+
+        if (brain.guess(input)[0] > 0.5){
+            velocity = LIFT;
+        }
     }
 
     private void stayInBoundaries(Point panelSize) {
@@ -70,5 +88,17 @@ public class Bird {
 
     public double getVelocity() {
         return velocity;
+    }
+
+    public int getScore(){
+        return score;
+    }
+
+    public void increaseScore(){
+        score++;
+    }
+
+    public void setScoreToZero(){
+        score = 0;
     }
 }

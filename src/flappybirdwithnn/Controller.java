@@ -1,40 +1,35 @@
 package flappybirdwithnn;
 
-import basicneuralnetwork.NeuralNetwork;
-
 import java.awt.*;
 import java.util.ArrayList;
 
 public class Controller {
 
     private static final int SPACE = 250;
+    private static final int BIRDS = 100;
+    private static final int BIRD_RADIUS = 15;
+    private static final int BIRD_POSITION_X = 200;
 
     private ArrayList<Pipe> pipes;
-    private Bird bird;
+    private ArrayList<Bird> birds;
 
     private Pipe currentPipe;
 
     private Point panelSize;
-    private int score;
-
     private Color color;
-
-    private NeuralNetwork nn;
 
     public Controller(Point panelSize, Color color) {
         this.panelSize = panelSize;
 
         pipes = new ArrayList<>();
-        bird = new Bird(panelSize, color);
+        birds = new ArrayList<>();
 
-        score = 0;
+        for (int i = 0; i < BIRDS; i++) {
+            birds.add(new Bird(panelSize, color));
+        }
 
         this.color = color;
         initializePipes();
-
-        // inputs: positionX of current pipe, spaceHeight of currentPipe, positionY of Bird, velocity of Bird
-        // output: Up or down
-        nn = new NeuralNetwork(4, 3, 1);
     }
 
     private void initializePipes() {
@@ -50,15 +45,8 @@ public class Controller {
     }
 
     public void drawAll(Graphics g) {
-        double[] input = {
-                currentPipe.getPositionX(),
-                currentPipe.getSpaceHeight(),
-                bird.getPositionY(),
-                bird.getVelocity()
-        };
-
-        if (nn.guess(input)[0] > 0.5){
-            bird.fly();
+        for (Bird bird : birds) {
+            bird.fly(currentPipe);
         }
 
         drawPipes(g);
@@ -71,11 +59,8 @@ public class Controller {
     }
 
     private void findCurrentPipe() {
-        int birdPositionX = bird.getPositionX();
-        int birdRadius = bird.getRadius();
-
         for (Pipe pipe : pipes) {
-            if (pipe.getPositionX() + pipe.getWidth() >= birdPositionX - birdRadius) {
+            if (pipe.getPositionX() + pipe.getWidth() >= BIRD_POSITION_X - BIRD_RADIUS) {
                 currentPipe = pipe;
                 return;
             }
@@ -101,28 +86,51 @@ public class Controller {
     }
 
     private void drawBird(Graphics g) {
-        bird.draw(g, panelSize);
+        for (Bird bird : birds) {
+            bird.draw(g, panelSize);
+        }
     }
 
     private void drawScore(Graphics g) {
+        int highestScore = getHighestScore();
+
         Color outline = color == Color.BLACK ? Color.WHITE : Color.BLACK;
+
+        String score = "Highest Score: " + highestScore;
+
         g.setFont(new Font("Calibri", Font.BOLD, 30));
         g.setColor(outline);
-        g.drawString("Score: " + score, 25 - 1, 35 + 1);
-        g.drawString("Score: " + score, 25 - 1, 35 - 1);
-        g.drawString("Score: " + score, 25 + 1, 35 + 1);
-        g.drawString("Score: " + score, 25 + 1, 35 - 1);
+        g.drawString(score, 25 - 1, 35 + 1);
+        g.drawString(score, 25 - 1, 35 - 1);
+        g.drawString(score, 25 + 1, 35 + 1);
+        g.drawString(score, 25 + 1, 35 - 1);
         g.setColor(color);
-        g.drawString("Score: " + score, 25, 35);
+        g.drawString(score, 25, 35);
+    }
+
+    private int getHighestScore() {
+        int highestScore = birds.get(0).getScore();
+
+        for (Bird bird : birds) {
+            int birdScore = bird.getScore();
+
+            if (birdScore > highestScore){
+                highestScore = birdScore;
+            }
+        }
+
+        return highestScore;
     }
 
     private void collisionDetection() {
-        if (currentPipe.passedByBird(bird)) {
-            score++;
-        }
+        for (Bird bird : birds) {
+            if (currentPipe.passedByBird(bird)) {
+                bird.increaseScore();
+            }
 
-        if (currentPipe.detectCollisionWithBird(bird)) {
-            score = 0;
+            if (currentPipe.detectCollisionWithBird(bird)) {
+                bird.setScoreToZero();
+            }
         }
     }
 
