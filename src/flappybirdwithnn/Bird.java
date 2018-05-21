@@ -67,4 +67,8 @@ public class Bird {
     public double getPositionY() {
         return positionY;
     }
+
+    public double getVelocity() {
+        return velocity;
+    }
 }

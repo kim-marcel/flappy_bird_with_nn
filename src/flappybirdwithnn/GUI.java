@@ -65,8 +65,6 @@ public class GUI extends javax.swing.JPanel {
     }
 
     public void keyPressed(KeyEvent evt) {
-        c.keyPressed(evt);
-
         if (evt.getKeyCode() == KeyEvent.VK_P){
             timer.stop();
         }

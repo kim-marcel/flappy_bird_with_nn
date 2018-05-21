@@ -1,7 +1,8 @@
 package flappybirdwithnn;
 
+import basicneuralnetwork.NeuralNetwork;
+
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 public class Controller {
@@ -18,6 +19,8 @@ public class Controller {
 
     private Color color;
 
+    private NeuralNetwork nn;
+
     public Controller(Point panelSize, Color color) {
         this.panelSize = panelSize;
 
@@ -28,6 +31,10 @@ public class Controller {
 
         this.color = color;
         initializePipes();
+
+        // inputs: positionX of current pipe, spaceHeight of currentPipe, positionY of Bird, velocity of Bird
+        // output: Up or down
+        nn = new NeuralNetwork(4, 3, 1);
     }
 
     private void initializePipes() {
@@ -43,6 +50,17 @@ public class Controller {
     }
 
     public void drawAll(Graphics g) {
+        double[] input = {
+                currentPipe.getPositionX(),
+                currentPipe.getSpaceHeight(),
+                bird.getPositionY(),
+                bird.getVelocity()
+        };
+
+        if (nn.guess(input)[0] > 0.5){
+            bird.fly();
+        }
+
         drawPipes(g);
         drawBird(g);
 
@@ -112,11 +130,5 @@ public class Controller {
         int positionX = pipes.get(pipes.size() - 1).getPositionX() + SPACE;
 
         pipes.add(new Pipe(positionX, panelSize, color));
-    }
-
-    public void keyPressed(KeyEvent evt) {
-        if (evt.getKeyCode() == KeyEvent.VK_SPACE) {
-            bird.fly();
-        }
     }
 }

@@ -62,4 +62,8 @@ public class Pipe {
     public int getWidth() {
         return WIDTH;
     }
+
+    public int getSpaceHeight() {
+        return spaceHeight;
+    }
 }
