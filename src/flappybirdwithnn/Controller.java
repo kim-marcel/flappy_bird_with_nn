@@ -2,6 +2,7 @@ package flappybirdwithnn;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Controller {
 
@@ -14,22 +15,27 @@ public class Controller {
     private ArrayList<Bird> birds;
 
     private Pipe currentPipe;
-
     private Point panelSize;
     private Color color;
+    private int epoch;
 
     public Controller(Point panelSize, Color color) {
         this.panelSize = panelSize;
 
+        epoch = 0;
+
         pipes = new ArrayList<>();
         birds = new ArrayList<>();
 
+        this.color = color;
+        initializeBirds();
+        initializePipes();
+    }
+
+    private void initializeBirds(){
         for (int i = 0; i < BIRDS; i++) {
             birds.add(new Bird(panelSize, color));
         }
-
-        this.color = color;
-        initializePipes();
     }
 
     private void initializePipes() {
@@ -56,6 +62,7 @@ public class Controller {
         collisionDetection();
 
         drawScore(g);
+        drawEpoch(g);
     }
 
     private void findCurrentPipe() {
@@ -107,9 +114,24 @@ public class Controller {
         g.setColor(color);
         g.drawString(score, 25, 35);
     }
+    
+    private void drawEpoch(Graphics g){
+        Color outline = color == Color.BLACK ? Color.WHITE : Color.BLACK;
+
+        String text = "Epoch: " + epoch;
+
+        g.setFont(new Font("Calibri", Font.BOLD, 30));
+        g.setColor(outline);
+        g.drawString(text, 25 - 1, 65 + 1);
+        g.drawString(text, 25 - 1, 65 - 1);
+        g.drawString(text, 25 + 1, 65 + 1);
+        g.drawString(text, 25 + 1, 65 - 1);
+        g.setColor(color);
+        g.drawString(text, 25, 65);
+    }
 
     private int getHighestScore() {
-        int highestScore = birds.get(0).getScore();
+        int highestScore = 0;
 
         for (Bird bird : birds) {
             int birdScore = bird.getScore();
@@ -123,15 +145,31 @@ public class Controller {
     }
 
     private void collisionDetection() {
-        for (Bird bird : birds) {
+        Iterator<Bird> i = birds.iterator();
+        while (i.hasNext()) {
+            Bird bird = i.next();
             if (currentPipe.passedByBird(bird)) {
                 bird.increaseScore();
             }
 
             if (currentPipe.detectCollisionWithBird(bird)) {
                 bird.setScoreToZero();
+                i.remove();
             }
         }
+
+        if (birds.isEmpty()){
+            newEpoch();
+        }
+    }
+
+    private void newEpoch() {
+        pipes.clear();
+
+        initializePipes();
+        initializeBirds();
+
+        epoch++;
     }
 
     private void addNewPipe() {
